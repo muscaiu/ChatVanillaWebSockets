@@ -1,0 +1,50 @@
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.2/socket.io.js"></script>
+
+<body>
+    <div class="imgcontainer">
+        <img src="/img/img_avatar2.png" alt="Avatar" class="avatar">
+    </div>
+
+    <div class="container">
+        <input id="usernameLogin" type="text" placeholder="Enter Username" name="uname" required>
+        <input id="passwordLogin" type="password" placeholder="Enter Password" name="psw" required>
+        <button onclick="SubmitData()" type="submit">Login</button>
+    </div>
+
+
+    <script>
+        var socket = io()
+
+        SubmitData = function() {
+            let usernameLogin = document.getElementById('usernameLogin').value
+            let passwordLogin = document.getElementById('passwordLogin').value
+
+            if (usernameLogin == "" && passwordLogin === "") {
+                console.log('empty fields')
+            } else {
+                console.log("u: " + usernameLogin, "p: " + passwordLogin)
+                socket.emit('login attempt', usernameLogin, passwordLogin)
+            }
+        }
+
+        socket.on('login', function(data) {
+            usernameLogin = ''
+            passwordLogin = ''
+            var userToken = Math.random().toString(36).substring(3, 16) // + new Date
+            localStorage.setItem('userToken', userToken)
+                //socket.emit('user token', localStorage.getItem('userToken'))
+            console.log(userToken)
+
+            currentUser = {
+                username: data.username,
+                token: userToken
+            }
+            window.location.href = 'chatroom.html';
+        })
+
+        socket.on('wrong credentials', function() {
+            console.log('wrong credentials')
+        })
+    </script>
+</body>

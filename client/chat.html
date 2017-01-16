@@ -1,0 +1,31 @@
+<!--<nav>
+    <div class="nav-wrapper">
+        <a ui-sref="login" class="brand-logo">Login</a>
+        <a href="#" data-activates="mobile-demo" class="button-collapse">
+            <i class="material-icons">menu</i>
+        </a>
+        <ul class="right hide-on-med-and-down">
+            <li><a href="sass.html">Sass</a></li>
+            <li><a href="mobile.html">Mobile</a></li>
+        </ul>
+    </div>
+</nav>
+
+<ul ng-repeat="user in navbar.users">
+    <li>{{user}}</li>
+</ul>-->
+
+
+<div class="page-header text-center">
+    <h4>Welcome to Chat</h4>
+    <div id="status-buttons" class="text-center">
+        <a ui-sref-active="active" ui-sref=".login"><span></span> Login</a>
+        <a ui-sref-active="active" ui-sref=".register"><span></span> Register</a>
+        <a ui-sref-active="active" ui-sref=".chatroom"><span></span> Chat</a>
+    </div>
+    <!--<form id="signup-form" ng-submit="processForm()">-->
+        <div id="form-views" ui-view></div>
+    <!--</form>-->
+</div>
+
+

@@ -1,0 +1,29 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.2/socket.io.js"></script>
+
+<body>
+    <p>Just logged in: <span id="usernameDiv">  </p>
+    <p>Logged in users: <span id="participants"></span></p>
+    <span>you are: <b>??</span></b>
+    </span>
+    <p>Archive...</p>
+    <h3>{{ message.username }} : <span class="message">{{ message.message }}</span></h3>
+    <input required ng-model="chat.message" type="text" class="validate" name="username" />
+    <input onclick='sendMessage()' type="submit" class=" btn green waves-effect waves-light" value="Send">
+    <button onclick="clickDisconnect()">Disconnect</button>
+
+    <script>
+        var socket = io()
+        var users = []
+        var participants = 0
+
+        socket.on('user logged in', function(data) {
+            users.push(data.username);
+            participants = data.numUsers
+            console.log('logged users: ' + users)
+            console.log('total users: ' + users)
+
+            document.getElementById('usernameDiv').innerHTML = data.username
+            document.getElementById('participants').innerHTML = participants
+        })
+    </script>
+</body>

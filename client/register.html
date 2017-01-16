@@ -1,0 +1,30 @@
+
+<main>
+    <div class="valign-wrapper row login-box">
+        <div class="valign-center col card hoverable s10 pull-s1 m6 pull-m3 l4 pull-l4">
+            <form ng-submit="chat.RegisterForm()">
+                <div class="card-content">
+                    <!--<span class="card-title">Enter credentials</span>-->
+                    <div class="row">
+                        <div class="input-field col s12">
+                            <label for="username">Name</label>
+                            <input required ng-model="chat.usernameRegister" type="text" class="validate" name="username"/>
+                        </div>
+                        <div class="input-field col s12">
+                            <label for="password">Password </label>
+                            <input required ng-model="chat.passwordRegister" type="password" class="validate" name="password"/>
+                        </div>
+                        <div class="input-field col s12">
+                            <label for="password">Repeat Password </label>
+                            <input required ng-model="chat.repeatPasswordRegister" type="password" class="validate" name="repeatPassword" />
+                        </div>
+                    </div>
+                </div>
+                <div class="card-action right-align">
+                    <input id="submitRegister" type="submit" class="btn green waves-effect waves-light" value="Register">
+                    <!--<a href="#/login" class="btn-flat grey-text waves-effect">Login</a>-->
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
