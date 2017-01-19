@@ -28,7 +28,6 @@ io.on('connection', function(socket) {
     var userToken = null
         ++numSockets
     console.log("Sockets: " + numSockets, " | Users: " + numUsers)
-
     socket.on('user token', function(data) {
         console.log(data)
     })
@@ -49,6 +48,14 @@ io.on('connection', function(socket) {
             res.send(result)
         })
     }
+
+    socket.on('request users', function() {
+        socket.emit('receive users', {
+            username: loggedUser,
+            numUsers: numUsers,
+            usersArray: usersArray
+        });
+    })
 
     socket.on('register user', function(username, password) {
         console.log('regUser: ' + username, 'regPassword: ' + password)
@@ -81,7 +88,8 @@ io.on('connection', function(socket) {
                 });
                 io.sockets.emit('user logged in', {
                     username: socket.username,
-                    numUsers: numUsers
+                    numUsers: numUsers,
+                    usersArray: usersArray
                 })
             } else {
                 console.log('wrong credentials')
@@ -105,7 +113,7 @@ io.on('connection', function(socket) {
         })
     })
 
-    socket.on('log off', function(data) {
+    socket.on('click log off', function(data) {
         console.log(loggedUser + " logged out")
         if (addedUser) {
             --numUsers;
@@ -113,9 +121,10 @@ io.on('connection', function(socket) {
             console.log('users', usersArray)
             console.log("Sockets: " + numSockets, " | Users: " + numUsers)
                 // echo globally that this client has left
-            socket.broadcast.emit('user left', {
+            io.sockets.emit('user left', {
                 username: loggedUser,
-                numUsers: numUsers
+                numUsers: numUsers,
+                usersArray: usersArray
             });
         }
         console.log("Sockets: " + numSockets, " | Users: " + numUsers)
@@ -137,7 +146,8 @@ io.on('connection', function(socket) {
             // echo globally that this client has left
             socket.broadcast.emit('user left', {
                 username: socket.username,
-                numUsers: numUsers
+                numUsers: numUsers,
+                usersArray: usersArray
             });
         }
     });

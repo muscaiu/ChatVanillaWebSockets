@@ -7,20 +7,19 @@
     <input id="usernameLogin" type="text" placeholder="Enter Username" name="uname" required>
     <input id="passwordLogin" type="password" placeholder="Enter Password" name="psw" required>
     <button onclick="SubmitData()" type="submit">Login</button>
-
+    <button onclick="ClickLogOff()">Disconnect</button>
     <!--ChatRoom-->
-    <p>Users: <span id="participants"></span> | <span id="usernameDiv"></span></p>
+    <p>Users: <span id="numUsers"></span> | <span id="usernameDiv"></span></p>
     <span id="ul"></span>
     <input required id="message" type="text" class="validate" />
     <input onclick='SendMessage()' type="submit" class=" btn green waves-effect waves-light" value="Send">
-    <button onclick="clickDisconnect()">Disconnect</button>
+
 
     <script>
         var socket = io()
             //var users = []
         var messages = []
         var connected = false
-        var participants = 0
         var loggedUser = "Guest"
 
         var ul = document.createElement('ul')
@@ -38,16 +37,19 @@
                 message: data.message
             })
 
-            // for (var i = 0; i < messages.length; i++) {
             var li = document.createElement('li')
             li.appendChild(document.createTextNode(data.username))
             li.appendChild(document.createTextNode(' : '))
             li.appendChild(document.createTextNode(data.message))
-                //}
             ul.appendChild(li)
             document.getElementById('ul').appendChild(ul)
         }
 
+        socket.emit('request users')
+        socket.on('receive users', function(data) {
+            document.getElementById('usernameDiv').innerHTML = data.usersArray
+            document.getElementById('numUsers').innerHTML = data.numUsers
+        })
 
         //login Logic
         function SubmitData() {
@@ -61,11 +63,10 @@
             }
         }
         socket.on('user logged in', function(data) {
-            //users.push(data.username);
-            participants = data.numUsers
-                //console.log('logged users: ' + users)
-            document.getElementById('usernameDiv').innerHTML = data.username
-            document.getElementById('participants').innerHTML = participants
+            //users.push(data.username); 
+            //console.log('logged users: ' + users)
+            document.getElementById('usernameDiv').innerHTML = data.usersArray
+            document.getElementById('numUsers').innerHTML = data.numUsers
         })
         socket.on('login', function(data) {
             usernameLogin = ''
@@ -107,16 +108,15 @@
             // console.log(messages)
         })
 
-        function clickDisconnect() {
-            socket.emit('log off') //emits logged out && user left
+        function ClickLogOff() {
+            socket.emit('click log off') //emits logged out && user left
         }
 
         socket.on('user left', function(data) {
             //_.pull(users, data.username)
-            participants = data.numUsers
             console.log(data.username + ' left')
-            document.getElementById('usernameDiv').innerHTML = data.username
-            document.getElementById('participants').innerHTML = participants
+            document.getElementById('usernameDiv').innerHTML = data.usersArray
+            document.getElementById('numUsers').innerHTML = data.numUsers
         })
 
         //Execute Log off from server
