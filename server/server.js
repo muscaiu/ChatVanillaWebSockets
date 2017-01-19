@@ -4,6 +4,7 @@ var port = process.env.PORT || 3000;
 var server = require('http').createServer(app);
 var mongoose = require('mongoose')
 var io = require('socket.io')(server)
+var _ = require('lodash')
 
 //User model for mongoose
 var User = mongoose.model('user', {
@@ -19,6 +20,7 @@ var Message = mongoose.model('message', {
 var numUsers = 0;
 var numSockets = 0;
 var loggedUser = "Guest"
+var usersArray = []
 
 //io
 io.on('connection', function(socket) {
@@ -67,7 +69,9 @@ io.on('connection', function(socket) {
                     ++numUsers
                 addedUser = true;
                 loggedUser = user.username
-                console.log(loggedUser + ' logged in')
+                usersArray.push(loggedUser)
+
+                console.log('users: ', usersArray)
                 console.log("Sockets: " + numSockets, " | Users: " + numUsers)
 
                 //io.sockets.emit('user logged in', socket.username)
@@ -105,24 +109,27 @@ io.on('connection', function(socket) {
         console.log(loggedUser + " logged out")
         if (addedUser) {
             --numUsers;
-
-            // echo globally that this client has left
+            _.pull(usersArray, loggedUser)
+            console.log('users', usersArray)
+            console.log("Sockets: " + numSockets, " | Users: " + numUsers)
+                // echo globally that this client has left
             socket.broadcast.emit('user left', {
-                username: socket.username,
+                username: loggedUser,
                 numUsers: numUsers
             });
         }
         console.log("Sockets: " + numSockets, " | Users: " + numUsers)
 
-        socket.username = "Guest"
+        loggedUser = "Guest"
         addedUser = false
 
         socket.broadcast.emit('log off event', numSockets, numUsers)
     })
 
     socket.on('disconnect', function() {
-        console.log(loggedUser + " logged out")
-            --numSockets
+        --numSockets
+        _.pull(usersArray, socket.username)
+        console.log('users', usersArray)
         console.log("Sockets: " + numSockets, " | Users: " + numUsers)
         if (addedUser) {
             --numUsers;

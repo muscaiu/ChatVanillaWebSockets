@@ -9,8 +9,7 @@
     <button onclick="SubmitData()" type="submit">Login</button>
 
     <!--ChatRoom-->
-    <p>Just logged in: <span id="usernameDiv"></span> </p>
-    <p>Logged in users: <span id="participants"></span></p>
+    <p>Users: <span id="participants"></span> | <span id="usernameDiv"></span></p>
     <span id="ul"></span>
     <input required id="message" type="text" class="validate" />
     <input onclick='SendMessage()' type="submit" class=" btn green waves-effect waves-light" value="Send">
@@ -61,7 +60,6 @@
                 socket.emit('login attempt', usernameLogin, passwordLogin)
             }
         }
-
         socket.on('user logged in', function(data) {
             //users.push(data.username);
             participants = data.numUsers
@@ -69,8 +67,6 @@
             document.getElementById('usernameDiv').innerHTML = data.username
             document.getElementById('participants').innerHTML = participants
         })
-
-
         socket.on('login', function(data) {
             usernameLogin = ''
             passwordLogin = ''
@@ -84,7 +80,6 @@
                 token: userToken
             }
         })
-
         socket.on('wrong credentials', function() {
             console.log('wrong credentials')
         })
@@ -119,14 +114,18 @@
         socket.on('user left', function(data) {
             //_.pull(users, data.username)
             participants = data.numUsers
-
             console.log(data.username + ' left')
+            document.getElementById('usernameDiv').innerHTML = data.username
+            document.getElementById('participants').innerHTML = participants
         })
 
         //Execute Log off from server
         socket.on('log off event', function(numSockets, numUsers) {
-            //console.log('logged in users: ' + users)
+            console.log('logged in users: ' + numUsers)
         })
+
+
+
         socket.on('disconnect', function() {
             console.log('Disconnected')
         })
