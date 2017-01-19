@@ -1,29 +1,140 @@
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.2/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
 
 <body>
-    <p>Just logged in: <span id="usernameDiv">  </p>
+    <!--Login-->
+    <input id="usernameLogin" type="text" placeholder="Enter Username" name="uname" required>
+    <input id="passwordLogin" type="password" placeholder="Enter Password" name="psw" required>
+    <button onclick="SubmitData()" type="submit">Login</button>
+
+    <!--ChatRoom-->
+    <p>Just logged in: <span id="usernameDiv"></span> </p>
     <p>Logged in users: <span id="participants"></span></p>
-    <span>you are: <b>??</span></b>
-    </span>
-    <p>Archive...</p>
-    <h3>{{ message.username }} : <span class="message">{{ message.message }}</span></h3>
-    <input required ng-model="chat.message" type="text" class="validate" name="username" />
-    <input onclick='sendMessage()' type="submit" class=" btn green waves-effect waves-light" value="Send">
+    <span id="ul"></span>
+    <input required id="message" type="text" class="validate" />
+    <input onclick='SendMessage()' type="submit" class=" btn green waves-effect waves-light" value="Send">
     <button onclick="clickDisconnect()">Disconnect</button>
 
     <script>
         var socket = io()
-        var users = []
+            //var users = []
+        var messages = []
+        var connected = false
         var participants = 0
+        var loggedUser = "Guest"
+
+        var ul = document.createElement('ul')
+
+        //OLD Jquery HTTP Call and LoadChatMessage to screen
+        $.getJSON('http://localhost:3000/api/message', function(data) {
+                $.each(data, function(key, val) {
+                    LoadChatMessages(val)
+                })
+            })
+            //add message the screen
+        var LoadChatMessages = function(data) {
+            messages.push({
+                username: data.username,
+                message: data.message
+            })
+
+            // for (var i = 0; i < messages.length; i++) {
+            var li = document.createElement('li')
+            li.appendChild(document.createTextNode(data.username))
+            li.appendChild(document.createTextNode(' : '))
+            li.appendChild(document.createTextNode(data.message))
+                //}
+            ul.appendChild(li)
+            document.getElementById('ul').appendChild(ul)
+        }
+
+
+        //login Logic
+        function SubmitData() {
+            let usernameLogin = document.getElementById('usernameLogin').value
+            let passwordLogin = document.getElementById('passwordLogin').value
+            if (usernameLogin == "" && passwordLogin === "") {
+                console.log('empty fields')
+            } else {
+                console.log("u: " + usernameLogin, "p: " + passwordLogin)
+                socket.emit('login attempt', usernameLogin, passwordLogin)
+            }
+        }
 
         socket.on('user logged in', function(data) {
-            users.push(data.username);
+            //users.push(data.username);
             participants = data.numUsers
-            console.log('logged users: ' + users)
-            console.log('total users: ' + users)
-
+                //console.log('logged users: ' + users)
             document.getElementById('usernameDiv').innerHTML = data.username
             document.getElementById('participants').innerHTML = participants
+        })
+
+
+        socket.on('login', function(data) {
+            usernameLogin = ''
+            passwordLogin = ''
+            var userToken = Math.random().toString(36).substring(3, 16) // + new Date
+            localStorage.setItem('userToken', userToken)
+                //socket.emit('user token', localStorage.getItem('userToken'))
+            console.log(userToken)
+
+            currentUser = {
+                username: data.username,
+                token: userToken
+            }
+        })
+
+        socket.on('wrong credentials', function() {
+            console.log('wrong credentials')
+        })
+
+        //Sending message
+        function SendMessage() {
+            var message = document.getElementById('message').value
+            socket.emit('send message', message)
+        }
+
+        socket.on('emit message', function(data) {
+            messages.push({
+                username: data.username,
+                message: data.message
+            })
+            var ul = document.getElementsByTagName('ul')[0]
+            var li = document.createElement('li')
+            li.appendChild(document.createTextNode(data.username))
+            li.appendChild(document.createTextNode(' : '))
+            li.appendChild(document.createTextNode(data.message))
+            ul.appendChild(li)
+
+            // document.getElementById('usernameArchive').innerHTML = messages.username
+            // document.getElementById('messageArchive').innerHTML = messages.message
+            // console.log(messages)
+        })
+
+        function clickDisconnect() {
+            socket.emit('log off') //emits logged out && user left
+        }
+
+        socket.on('user left', function(data) {
+            //_.pull(users, data.username)
+            participants = data.numUsers
+
+            console.log(data.username + ' left')
+        })
+
+        //Execute Log off from server
+        socket.on('log off event', function(numSockets, numUsers) {
+            //console.log('logged in users: ' + users)
+        })
+        socket.on('disconnect', function() {
+            console.log('Disconnected')
+        })
+        socket.on('reconnect', function() {
+            console.log('Connected')
+        })
+        socket.on('reconnect_error', function() {
+            console.log('Attempt to reconnect failed')
         })
     </script>
 </body>

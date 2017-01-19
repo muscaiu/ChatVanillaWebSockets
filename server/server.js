@@ -18,14 +18,14 @@ var Message = mongoose.model('message', {
 //logged in users
 var numUsers = 0;
 var numSockets = 0;
+var loggedUser = "Guest"
 
 //io
 io.on('connection', function(socket) {
     var addedUser = false
     var userToken = null
-
-    numSockets += 1
-    console.log(numSockets + " sockets connected")
+        ++numSockets
+    console.log("Sockets: " + numSockets, " | Users: " + numUsers)
 
     socket.on('user token', function(data) {
         console.log(data)
@@ -44,7 +44,6 @@ io.on('connection', function(socket) {
 
     function GetMessages(req, res) {
         Message.find({}).exec(function(err, result) {
-            console.log(result)
             res.send(result)
         })
     }
@@ -61,17 +60,18 @@ io.on('connection', function(socket) {
     });
 
     socket.on('login attempt', function(username, password) {
-        console.log('loginUser: ' + username, 'loginPassword: ' + password)
         User.findOne({ username: username, password: password }, function(err, user) {
             if (user) {
                 if (addedUser) return;
-
-                console.log(user.username + ' logged in')
                 socket.username = username
                     ++numUsers
                 addedUser = true;
+                loggedUser = user.username
+                console.log(loggedUser + ' logged in')
+                console.log("Sockets: " + numSockets, " | Users: " + numUsers)
+
                 //io.sockets.emit('user logged in', socket.username)
-                io.sockets.emit('login', {
+                socket.emit('login', {
                     username: socket.username,
                     numUsers: numUsers
                 });
@@ -81,7 +81,6 @@ io.on('connection', function(socket) {
                 })
             } else {
                 console.log('wrong credentials')
-                    //send info wrong credentials
                 socket.emit('wrong credentials')
             }
         })
@@ -102,9 +101,29 @@ io.on('connection', function(socket) {
         })
     })
 
+    socket.on('log off', function(data) {
+        console.log(loggedUser + " logged out")
+        if (addedUser) {
+            --numUsers;
+
+            // echo globally that this client has left
+            socket.broadcast.emit('user left', {
+                username: socket.username,
+                numUsers: numUsers
+            });
+        }
+        console.log("Sockets: " + numSockets, " | Users: " + numUsers)
+
+        socket.username = "Guest"
+        addedUser = false
+
+        socket.broadcast.emit('log off event', numSockets, numUsers)
+    })
+
     socket.on('disconnect', function() {
-        numSockets -= 1
-        console.log(numSockets + " sockets connected")
+        console.log(loggedUser + " logged out")
+            --numSockets
+        console.log("Sockets: " + numSockets, " | Users: " + numUsers)
         if (addedUser) {
             --numUsers;
 
@@ -119,8 +138,12 @@ io.on('connection', function(socket) {
 
 //serve files
 app.use(express.static(__dirname + '/../client'));
-
-//start server
+app.use(function(req, res, next) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        next();
+    })
+    //start server
 server.listen(port, function() {
     console.log('Server listening on port %d', port)
 })
