@@ -12,9 +12,7 @@
     <p>Users: <span id="numUsers"></span> | <span id="usernameDiv"></span></p>
     <span id="ul"></span>
     <input required id="message" type="text" class="validate" />
-    <input onclick='SendMessage()' type="submit" class=" btn green waves-effect waves-light" value="Send">
-
-
+    <input onclick='SendMessage()' id="btn-send" type="submit" style="background-color: lightgreen" value="Send">
     <script>
         var socket = io()
             //var users = []
@@ -128,9 +126,11 @@
 
         socket.on('disconnect', function() {
             console.log('Disconnected')
+            document.getElementById('btn-send').style.backgroundColor = "lightsalmon"
         })
         socket.on('reconnect', function() {
             console.log('Connected')
+            document.getElementById('btn-send').style.backgroundColor = "lightgreen"
         })
         socket.on('reconnect_error', function() {
             console.log('Attempt to reconnect failed')
