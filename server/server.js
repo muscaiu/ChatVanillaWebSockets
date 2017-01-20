@@ -72,7 +72,8 @@ io.on('connection', function(socket) {
         User.findOne({ username: username, password: password }, function(err, user) {
             if (user) {
                 if (addedUser) return;
-                socket.username = username
+
+                loggedUser = username
                     ++numUsers
                 addedUser = true;
                 loggedUser = user.username
@@ -81,13 +82,12 @@ io.on('connection', function(socket) {
                 console.log('users: ', usersArray)
                 console.log("Sockets: " + numSockets, " | Users: " + numUsers)
 
-                //io.sockets.emit('user logged in', socket.username)
                 socket.emit('login', {
-                    username: socket.username,
+                    username: loggedUser,
                     numUsers: numUsers
                 });
                 io.sockets.emit('user logged in', {
-                    username: socket.username,
+                    username: loggedUser,
                     numUsers: numUsers,
                     usersArray: usersArray
                 })
@@ -99,45 +99,46 @@ io.on('connection', function(socket) {
     })
 
     socket.on('send message', function(data) {
-        console.log(socket.username + ': ' + data)
+        if (!addedUser) {
+            loggedUser = "Guest"
+        }
+
+        console.log(loggedUser + ': ' + data)
             //Save user in MongoDB
         var message = new Message({
-            username: socket.username,
+            username: loggedUser,
             message: data,
         })
         message.save()
             //socket.emit('emit message', message)
         io.sockets.emit('emit message', {
-            username: socket.username,
+            username: loggedUser,
             message: data
         })
     })
 
     socket.on('click log off', function(data) {
-        console.log(loggedUser + " logged out")
         if (addedUser) {
             --numUsers;
             _.pull(usersArray, loggedUser)
-            console.log('users', usersArray)
-            console.log("Sockets: " + numSockets, " | Users: " + numUsers)
-                // echo globally that this client has left
+
             io.sockets.emit('user left', {
                 username: loggedUser,
                 numUsers: numUsers,
                 usersArray: usersArray
             });
+
+            loggedUser = "Guest"
+            addedUser = false
+            console.log(loggedUser + " logged out")
+            console.log('users', usersArray)
+            console.log("Sockets: " + numSockets, " | Users: " + numUsers)
         }
-        console.log("Sockets: " + numSockets, " | Users: " + numUsers)
-
-        loggedUser = "Guest"
-        addedUser = false
-
-        socket.broadcast.emit('log off event', numSockets, numUsers)
     })
 
     socket.on('disconnect', function() {
         --numSockets
-        _.pull(usersArray, socket.username)
+        _.pull(usersArray, loggedUser)
         console.log('users', usersArray)
         console.log("Sockets: " + numSockets, " | Users: " + numUsers)
         if (addedUser) {
@@ -145,7 +146,7 @@ io.on('connection', function(socket) {
 
             // echo globally that this client has left
             socket.broadcast.emit('user left', {
-                username: socket.username,
+                username: loggedUser,
                 numUsers: numUsers,
                 usersArray: usersArray
             });

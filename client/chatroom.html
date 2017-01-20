@@ -7,7 +7,7 @@
     <input id="usernameLogin" type="text" placeholder="Enter Username" name="uname" required>
     <input id="passwordLogin" type="password" placeholder="Enter Password" name="psw" required>
     <button onclick="SubmitData()" type="submit">Login</button>
-    <button onclick="ClickLogOff()">Disconnect</button>
+    <button onclick="ClickLogOff()">Logout</button>
     <!--ChatRoom-->
     <p>Users: <span id="numUsers"></span> | <span id="usernameDiv"></span></p>
     <span id="ul"></span>
@@ -100,10 +100,6 @@
             li.appendChild(document.createTextNode(' : '))
             li.appendChild(document.createTextNode(data.message))
             ul.appendChild(li)
-
-            // document.getElementById('usernameArchive').innerHTML = messages.username
-            // document.getElementById('messageArchive').innerHTML = messages.message
-            // console.log(messages)
         })
 
         function ClickLogOff() {
@@ -118,10 +114,9 @@
         })
 
         //Execute Log off from server
-        socket.on('log off event', function(numSockets, numUsers) {
-            console.log('logged in users: ' + numUsers)
-        })
-
+        // socket.on('log off event', function(numSockets, numUsers) {
+        //     console.log('logged in users: ' + numUsers)
+        // })
 
 
         socket.on('disconnect', function() {
