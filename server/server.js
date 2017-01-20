@@ -69,28 +69,40 @@ io.on('connection', function(socket) {
     });
 
     socket.on('login attempt', function(username, password) {
+        //look in DB
         User.findOne({ username: username, password: password }, function(err, user) {
-            if (user) {
-                if (addedUser) return;
 
-                loggedUser = username
-                    ++numUsers
-                addedUser = true;
-                loggedUser = user.username
-                usersArray.push(loggedUser)
+            if (user) { //if user found  in DB
+                if (addedUser) {
+                    console.log(user, 'socket is already logged')
+                } else {
+                    // loggedUser = username
+                    // console.log('1', username)
+                    //++numUsers
+                    loggedUser = user.username
+                    console.log('2', user.username)
 
-                console.log('users: ', usersArray)
-                console.log("Sockets: " + numSockets, " | Users: " + numUsers)
+                    usersArray.push(loggedUser)
+                    numUsers = usersArray.length
 
-                socket.emit('login', {
-                    username: loggedUser,
-                    numUsers: numUsers
-                });
-                io.sockets.emit('user logged in', {
-                    username: loggedUser,
-                    numUsers: numUsers,
-                    usersArray: usersArray
-                })
+                    console.log('users: ', usersArray)
+                    console.log("Sockets: " + numSockets, " | Users: " + numUsers)
+
+                    socket.emit('login', {
+                        username: loggedUser,
+                        numUsers: numUsers,
+                        usersArray: usersArray
+                    });
+                    io.sockets.emit('user logged in', {
+                        username: loggedUser,
+                        numUsers: numUsers,
+                        usersArray: usersArray
+                    })
+
+                    addedUser = true;
+                }
+
+
             } else {
                 console.log('wrong credentials')
                 socket.emit('wrong credentials')
@@ -119,9 +131,8 @@ io.on('connection', function(socket) {
 
     socket.on('click log off', function(data) {
         if (addedUser) {
-            --numUsers;
             _.pull(usersArray, loggedUser)
-
+            numUsers = usersArray.length
             io.sockets.emit('user left', {
                 username: loggedUser,
                 numUsers: numUsers,
@@ -138,13 +149,12 @@ io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
         --numSockets
-        _.pull(usersArray, loggedUser)
         console.log('users', usersArray)
         console.log("Sockets: " + numSockets, " | Users: " + numUsers)
         if (addedUser) {
-            --numUsers;
-
-            // echo globally that this client has left
+            _.pull(usersArray, loggedUser)
+            numUsers = usersArray.length
+                // echo globally that this client has left
             socket.broadcast.emit('user left', {
                 username: loggedUser,
                 numUsers: numUsers,

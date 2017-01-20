@@ -9,7 +9,7 @@
     <button onclick="SubmitData()" type="submit">Login</button>
     <button onclick="ClickLogOff()">Logout</button>
     <!--ChatRoom-->
-    <p>Users: <span id="numUsers"></span> | <span id="usernameDiv"></span></p>
+    <p>You are: <span id="loggedUser"></span> | Users: <span id="numUsers"> </span> | All: <span id="usernameDiv"></span></p>
     <span id="ul"></span>
     <input required id="message" type="text" class="validate" />
     <input onclick='SendMessage()' id="btn-send" type="submit" style="background-color: lightgreen" value="Send">
@@ -67,17 +67,21 @@
             document.getElementById('numUsers').innerHTML = data.numUsers
         })
         socket.on('login', function(data) {
-            usernameLogin = ''
-            passwordLogin = ''
-            var userToken = Math.random().toString(36).substring(3, 16) // + new Date
-            localStorage.setItem('userToken', userToken)
-                //socket.emit('user token', localStorage.getItem('userToken'))
-            console.log(userToken)
+            document.getElementById('usernameDiv').innerHTML = data.usersArray
+            document.getElementById('numUsers').innerHTML = data.numUsers
+            loggedUser = data.username
+            document.getElementById('loggedUser').innerHTML = loggedUser
 
-            currentUser = {
-                username: data.username,
-                token: userToken
-            }
+            //usernameLogin = ''
+            //passwordLogin = ''
+            // var userToken = Math.random().toString(36).substring(3, 16) // + new Date
+            //localStorage.setItem('userToken', userToken)
+            //socket.emit('user token', localStorage.getItem('userToken'))
+            //console.log(userToken)
+            // currentUser = {
+            //     username: data.username,
+            //     token: userToken
+            // }
         })
         socket.on('wrong credentials', function() {
             console.log('wrong credentials')
