@@ -17,9 +17,8 @@ var Message = mongoose.model('message', {
 })
 
 //logged in users
-var numUsers = 0;
-var numSockets = 0;
-var loggedUser = "Guest"
+var numUsers = 0
+var numSockets = 0
 var usersArray = []
 
 //io
@@ -51,7 +50,6 @@ io.on('connection', function(socket) {
 
     socket.on('request users', function() {
         socket.emit('receive users', {
-            username: loggedUser,
             numUsers: numUsers,
             usersArray: usersArray
         });
@@ -70,35 +68,32 @@ io.on('connection', function(socket) {
 
     socket.on('login attempt', function(username, password) {
         //look in DB
-        User.findOne({ username: username, password: password }, function(err, user) {
+        User.findOne({
+            username: username,
+            password: password
+        }, function(err, user) {
 
             if (user) { //if user found  in DB
                 if (addedUser) {
                     console.log(user, 'socket is already logged')
                 } else {
-                    // loggedUser = username
-                    // console.log('1', username)
-                    //++numUsers
-                    loggedUser = user.username
-                    console.log('2', user.username)
 
-                    usersArray.push(loggedUser)
+                    usersArray.push(user.username)
                     numUsers = usersArray.length
 
-                    console.log('users: ', usersArray)
-                    console.log("Sockets: " + numSockets, " | Users: " + numUsers)
-
-                    socket.emit('login', {
-                        username: loggedUser,
+                    socket.emit('user login', {
+                        username: user.username,
                         numUsers: numUsers,
                         usersArray: usersArray
                     });
-                    io.sockets.emit('user logged in', {
-                        username: loggedUser,
+                    io.sockets.emit('global user login', {
+                        username: user.username,
                         numUsers: numUsers,
                         usersArray: usersArray
                     })
 
+                    console.log('users: ', usersArray)
+                    console.log("Sockets: " + numSockets, " | Users: " + numUsers)
                     addedUser = true;
                 }
 
@@ -111,39 +106,40 @@ io.on('connection', function(socket) {
     })
 
     socket.on('send message', function(data) {
-        if (!addedUser) {
-            loggedUser = "Guest"
-        }
 
-        console.log(loggedUser + ': ' + data)
+        console.log(data.loggedUser + ': ' + data.message) ///cHECK THSIIIII<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             //Save user in MongoDB
         var message = new Message({
-            username: loggedUser,
-            message: data,
+            username: data.loggedUser,
+            message: data.message,
         })
         message.save()
             //socket.emit('emit message', message)
         io.sockets.emit('emit message', {
-            username: loggedUser,
-            message: data
+            username: data.loggedUser,
+            message: data.message
         })
     })
 
-    socket.on('click log off', function(data) {
+    socket.on('click log off', function(clientLoggedUser) {
         if (addedUser) {
-            _.pull(usersArray, loggedUser)
+            _.pull(usersArray, clientLoggedUser)
             numUsers = usersArray.length
+
             io.sockets.emit('user left', {
-                username: loggedUser,
+                username: clientLoggedUser,
                 numUsers: numUsers,
                 usersArray: usersArray
-            });
+            })
 
-            loggedUser = "Guest"
+            //loggedUser = "Guest"
             addedUser = false
-            console.log(loggedUser + " logged out")
+            console.log(clientLoggedUser + " logged out")
             console.log('users', usersArray)
             console.log("Sockets: " + numSockets, " | Users: " + numUsers)
+        } else {
+            socket.emit('not logged')
+            console.log('not logged')
         }
     })
 
@@ -152,11 +148,10 @@ io.on('connection', function(socket) {
         console.log('users', usersArray)
         console.log("Sockets: " + numSockets, " | Users: " + numUsers)
         if (addedUser) {
-            _.pull(usersArray, loggedUser)
-            numUsers = usersArray.length
-                // echo globally that this client has left
+            //_.pull(usersArray, loggedUser)
+
             socket.broadcast.emit('user left', {
-                username: loggedUser,
+                //username: loggedUser,
                 numUsers: numUsers,
                 usersArray: usersArray
             });

@@ -9,7 +9,7 @@
     <button onclick="SubmitData()" type="submit">Login</button>
     <button onclick="ClickLogOff()">Logout</button>
     <!--ChatRoom-->
-    <p>You are: <span id="loggedUser"></span> | Users: <span id="numUsers"> </span> | All: <span id="usernameDiv"></span></p>
+    <p>You are: <span id="loggedUser"></span> | Users: <span id="numUsers"> </span> | All: <span id="allUsers"></span></p>
     <span id="ul"></span>
     <input required id="message" type="text" class="validate" />
     <input onclick='SendMessage()' id="btn-send" type="submit" style="background-color: lightgreen" value="Send">
@@ -45,7 +45,8 @@
 
         socket.emit('request users')
         socket.on('receive users', function(data) {
-            document.getElementById('usernameDiv').innerHTML = data.usersArray
+            document.getElementById('loggedUser').innerHTML = loggedUser
+            document.getElementById('allUsers').innerHTML = data.usersArray
             document.getElementById('numUsers').innerHTML = data.numUsers
         })
 
@@ -60,29 +61,32 @@
                 socket.emit('login attempt', usernameLogin, passwordLogin)
             }
         }
-        socket.on('user logged in', function(data) {
-            //users.push(data.username); 
-            //console.log('logged users: ' + users)
-            document.getElementById('usernameDiv').innerHTML = data.usersArray
+
+        socket.on('user login', function(data) {
+            document.getElementById('allUsers').innerHTML = data.usersArray
             document.getElementById('numUsers').innerHTML = data.numUsers
-        })
-        socket.on('login', function(data) {
-            document.getElementById('usernameDiv').innerHTML = data.usersArray
-            document.getElementById('numUsers').innerHTML = data.numUsers
+                //getting loggeduser from the server
             loggedUser = data.username
             document.getElementById('loggedUser').innerHTML = loggedUser
-
-            //usernameLogin = ''
-            //passwordLogin = ''
-            // var userToken = Math.random().toString(36).substring(3, 16) // + new Date
-            //localStorage.setItem('userToken', userToken)
-            //socket.emit('user token', localStorage.getItem('userToken'))
-            //console.log(userToken)
-            // currentUser = {
-            //     username: data.username,
-            //     token: userToken
-            // }
+                //usernameLogin = ''
+                //passwordLogin = ''
+                // var userToken = Math.random().toString(36).substring(3, 16) // + new Date
+                //localStorage.setItem('userToken', userToken)
+                //socket.emit('user token', localStorage.getItem('userToken'))
+                //console.log(userToken)
+                // currentUser = {
+                //     username: data.username,
+                //     token: userToken
+                // }
         })
+        socket.on('global user login', function(data) {
+            //users.push(data.username); 
+            //console.log('logged users: ' + users)
+            document.getElementById('allUsers').innerHTML = data.usersArray
+            document.getElementById('numUsers').innerHTML = data.numUsers
+            console.log(data.username, data.usersArray, data.numUsers)
+        })
+
         socket.on('wrong credentials', function() {
             console.log('wrong credentials')
         })
@@ -90,7 +94,10 @@
         //Sending message
         function SendMessage() {
             var message = document.getElementById('message').value
-            socket.emit('send message', message)
+            socket.emit('send message', {
+                loggedUser: loggedUser,
+                message: message
+            })
         }
 
         socket.on('emit message', function(data) {
@@ -107,20 +114,19 @@
         })
 
         function ClickLogOff() {
-            socket.emit('click log off') //emits logged out && user left
+            socket.emit('click log off', loggedUser) //emits logged out && user left
+            loggedUser = "Guest"
+            document.getElementById('loggedUser').innerHTML = loggedUser
         }
 
         socket.on('user left', function(data) {
-            //_.pull(users, data.username)
-            console.log(data.username + ' left')
-            document.getElementById('usernameDiv').innerHTML = data.usersArray
+            console.log(data.username, ' left')
+            document.getElementById('allUsers').innerHTML = data.usersArray
             document.getElementById('numUsers').innerHTML = data.numUsers
         })
-
-        //Execute Log off from server
-        // socket.on('log off event', function(numSockets, numUsers) {
-        //     console.log('logged in users: ' + numUsers)
-        // })
+        socket.on('not logged', function() {
+            console.log('you are not logged in')
+        })
 
 
         socket.on('disconnect', function() {
